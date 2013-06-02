@@ -25,7 +25,7 @@ public class CrawlReferenceLibrary {
 
 	private List<URL> getChildren(URL url) throws IOException {
 		System.out.format("%s\n", url.toString());
-		
+
 		org.jsoup.nodes.Document htmlDoc = Jsoup.connect(url.toString()).get();
 		Elements links = htmlDoc.select("a[href]");
 		URL baseUrl = url;
@@ -85,47 +85,64 @@ public class CrawlReferenceLibrary {
 
 		String chapter = htmlDoc.select("[class^=StextHead]").first().text();
 
-		Section section = new Section(chapter);
+		Section section = null;
+		if (chapter.startsWith("[Pages")) {
+			if (document.getText().size() > 0) {
+				section = document.getText().get(0);
+			} else {
+				section = new Section("all");
+				document.getText().add(section);
+			}
+		} else {
+			section = new Section(chapter);
+			document.getText().add(section);
+		}
+
 		Elements paragraphs = htmlDoc.select("#workselectiontext tbody div");
 		for (Element paragraph : paragraphs) {
 			section.getParagraphs().add(paragraph.ownText());
 		}
 
-		document.getText().add(section);
+	}
 
+	public void crawl(File directory, URL bookUrl) throws IOException {
+		Book doc = new Book();
+		doc.setLanguage("en");
+		for (URL section : getChildren(bookUrl)) {
+			try {
+				parseInput(doc, section);
+			} catch (Exception e) {
+				System.err.println("Error for parsing: " + section.toString());
+			}
+		}
+		System.out.println("Writing " + new File(directory, doc.getFilename()).toString() + "...");
+		doc.writeXML(directory);
 	}
 
 	public void crawl(File directory) throws IOException {
 		URL root = new URL("http://reference.bahai.org/en/t/alpha.html");
-		int c = 0;
 		for (URL book : getChildren(root)) {
-			Book doc = new Book();
-			doc.setLanguage("en");
-			for (URL section : getChildren(book)) {
-				try {
-					parseInput(doc, section);
-				} catch (Exception e) {
-					System.err.println("Error for parsing: " + section.toString());
-				}
-			}
-			System.out.println("Writing " + new File(directory, doc.getFilename()).toString() + "...");
-			doc.writeXML(directory);
-			if (++c == 2)
-				break;
+			crawl(directory, book);
 		}
 	}
 
 	public static void main(String[] args) throws IOException, JAXBException {
+		CrawlReferenceLibrary crawler = new CrawlReferenceLibrary();
 		File directory = new File(".");
 		if (args.length > 0) {
+			// first argument directory
 			directory = new File(args[0]);
 			if (!directory.exists()) {
 				directory.mkdirs();
 			}
 		}
-		
-		CrawlReferenceLibrary crawler = new CrawlReferenceLibrary();
-		crawler.crawl(directory);
+		if (args.length > 1) {
+			// second argument link to book
+			crawler.crawl(directory, new URL(args[1]));
+		} else {
+			crawler.crawl(directory);
+		}
+
 	}
 
 }
