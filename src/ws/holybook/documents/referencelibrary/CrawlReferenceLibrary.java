@@ -99,8 +99,16 @@ public class CrawlReferenceLibrary {
 		}
 
 		Elements paragraphs = htmlDoc.select("#workselectiontext tbody div");
+		int relativeParagraphNumber = 1;
 		for (Element paragraph : paragraphs) {
-			section.getParagraphs().add(paragraph.ownText());
+			if (paragraph.attr("class").equals("Stext2") || section.getParagraphs().size() == 0 || relativeParagraphNumber != 1) {
+				section.getParagraphs().add(paragraph.ownText());
+			} else if (paragraph.attr("class").equals("Stext2Noindent")) {
+				int lastIndex = section.getParagraphs().size() - 1;
+				String lastParagraph = section.getParagraphs().get(lastIndex);
+				section.getParagraphs().set(lastIndex, lastParagraph + " " + paragraph.ownText());
+			}
+			relativeParagraphNumber++;
 		}
 
 	}
@@ -113,6 +121,7 @@ public class CrawlReferenceLibrary {
 				parseInput(doc, section);
 			} catch (Exception e) {
 				System.err.println("Error for parsing: " + section.toString());
+				e.printStackTrace();
 			}
 		}
 		System.out.println("Writing " + new File(directory, doc.getFilename()).toString() + "...");
