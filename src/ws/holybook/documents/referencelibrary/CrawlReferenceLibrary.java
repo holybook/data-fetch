@@ -15,8 +15,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ws.holybook.documents.Book;
-import ws.holybook.documents.Section;
+import ws.holybook.model.Book;
+import ws.holybook.model.Section;
 
 public class CrawlReferenceLibrary {
 
