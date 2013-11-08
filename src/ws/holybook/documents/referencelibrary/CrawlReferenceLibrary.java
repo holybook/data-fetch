@@ -125,7 +125,11 @@ public class CrawlReferenceLibrary {
 			}
 		}
 		System.out.println("Writing " + new File(directory, doc.getFilename()).toString() + "...");
-		doc.writeXML(directory);
+		try {
+			doc.writeXML(directory);
+		} catch (JAXBException e) {
+			System.err.format("Error while writing %s: %s\n", doc.getFilename(), e.getLocalizedMessage());
+		}
 	}
 
 	public void crawl(File directory) throws IOException {
