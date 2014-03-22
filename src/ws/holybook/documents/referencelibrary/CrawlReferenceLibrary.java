@@ -16,7 +16,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import ws.holybook.model.Book;
+import ws.holybook.model.Paragraph;
 import ws.holybook.model.Section;
+import ws.holybook.utils.IdUtil;
 
 public class CrawlReferenceLibrary {
 
@@ -58,8 +60,7 @@ public class CrawlReferenceLibrary {
 		} else if (!document.getTitle().equals(title)) {
 			// document has already a title, but it's different from the title
 			// on this page
-			throw new IllegalStateException(String.format("Trying to add data from %s to %s", title,
-					document.getTitle()));
+			throw new IllegalStateException(String.format("Trying to add data from %s to %s", title, document.getTitle()));
 		}
 
 		Elements workinfo = htmlDoc.select("#workinfo");
@@ -71,7 +72,7 @@ public class CrawlReferenceLibrary {
 			} else if (w.className().equals("workinfovalue")) {
 				switch (fieldName) {
 				case "author":
-					document.setAuthor(w.text());
+					document.setAuthor(IdUtil.encode(w.text()));
 					break;
 				case "source":
 					document.setSource(w.text());
@@ -102,11 +103,11 @@ public class CrawlReferenceLibrary {
 		int relativeParagraphNumber = 1;
 		for (Element paragraph : paragraphs) {
 			if (paragraph.attr("class").equals("Stext2") || section.getParagraphs().size() == 0 || relativeParagraphNumber != 1) {
-				section.getParagraphs().add(paragraph.ownText());
+				section.getParagraphs().add(new Paragraph(paragraph.ownText()));
 			} else if (paragraph.attr("class").equals("Stext2Noindent")) {
 				int lastIndex = section.getParagraphs().size() - 1;
-				String lastParagraph = section.getParagraphs().get(lastIndex);
-				section.getParagraphs().set(lastIndex, lastParagraph + " " + paragraph.ownText());
+				Paragraph lastParagraph = section.getParagraphs().get(lastIndex);
+				section.getParagraphs().set(lastIndex, new Paragraph(lastParagraph.getText() + " " + paragraph.ownText()));
 			}
 			relativeParagraphNumber++;
 		}
@@ -116,6 +117,7 @@ public class CrawlReferenceLibrary {
 	public void crawl(File directory, URL bookUrl) throws IOException {
 		Book doc = new Book();
 		doc.setLanguage("en");
+		doc.setReligion("bahai");
 		for (URL section : getChildren(bookUrl)) {
 			try {
 				parseInput(doc, section);
