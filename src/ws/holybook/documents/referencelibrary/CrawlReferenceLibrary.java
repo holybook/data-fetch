@@ -16,7 +16,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import ws.holybook.model.Book;
-import ws.holybook.model.Paragraph;
 import ws.holybook.model.Section;
 import ws.holybook.utils.IdUtil;
 
@@ -32,8 +31,8 @@ public class CrawlReferenceLibrary {
 		Elements links = htmlDoc.select("a[href]");
 		URL baseUrl = url;
 
-		Set<String> hrefs = new HashSet<>();
-		List<URL> result = new ArrayList<>();
+		Set<String> hrefs = new HashSet<String>();
+		List<URL> result = new ArrayList<URL>();
 
 		for (Element e : links) {
 
@@ -103,11 +102,11 @@ public class CrawlReferenceLibrary {
 		int relativeParagraphNumber = 1;
 		for (Element paragraph : paragraphs) {
 			if (paragraph.attr("class").equals("Stext2") || section.getParagraphs().size() == 0 || relativeParagraphNumber != 1) {
-				section.getParagraphs().add(new Paragraph(paragraph.ownText()));
+				section.getParagraphs().add(paragraph.ownText());
 			} else if (paragraph.attr("class").equals("Stext2Noindent")) {
 				int lastIndex = section.getParagraphs().size() - 1;
-				Paragraph lastParagraph = section.getParagraphs().get(lastIndex);
-				section.getParagraphs().set(lastIndex, new Paragraph(lastParagraph.getText() + " " + paragraph.ownText()));
+				String lastParagraph = section.getParagraphs().get(lastIndex);
+				section.getParagraphs().set(lastIndex, lastParagraph + " " + paragraph.ownText());
 			}
 			relativeParagraphNumber++;
 		}
