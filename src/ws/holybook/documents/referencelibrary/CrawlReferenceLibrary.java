@@ -15,8 +15,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ws.holybook.model.Book;
-import ws.holybook.model.Section;
+import ws.holybook.model.*;
 import ws.holybook.utils.IdUtil;
 
 public class CrawlReferenceLibrary {
@@ -54,12 +53,13 @@ public class CrawlReferenceLibrary {
 
 		String title = htmlDoc.select(".pageTitle").first().text();
 
-		if (document.getTitle() == null) {
-			document.setTitle(title);
-		} else if (!document.getTitle().equals(title)) {
+		if (document.getMeta().getTitle() == null) {
+			document.setId(IdUtil.encode(title));
+			document.getMeta().setTitle(title);
+		} else if (!document.getMeta().getTitle().equals(title)) {
 			// document has already a title, but it's different from the title
 			// on this page
-			throw new IllegalStateException(String.format("Trying to add data from %s to %s", title, document.getTitle()));
+			throw new IllegalStateException(String.format("Trying to add data from %s to %s", title, document.getMeta().getTitle()));
 		}
 
 		Elements workinfo = htmlDoc.select("#workinfo");
@@ -71,13 +71,14 @@ public class CrawlReferenceLibrary {
 			} else if (w.className().equals("workinfovalue")) {
 				switch (fieldName) {
 				case "author":
-					document.setAuthor(IdUtil.encode(w.text()));
+					String authorName = w.text();
+					document.getMeta().setAuthor(new Author(IdUtil.encode(authorName), authorName));
 					break;
 				case "source":
-					document.setSource(w.text());
+					document.getMeta().setSource(new Source(w.text()));
 					break;
 				case "pages":
-					document.setPages(Integer.parseInt(w.text()));
+					document.getMeta().setPages(Integer.parseInt(w.text()));
 					break;
 				}
 			}
@@ -87,15 +88,15 @@ public class CrawlReferenceLibrary {
 
 		Section section = null;
 		if (chapter.startsWith("[Pages")) {
-			if (document.getText().size() > 0) {
-				section = document.getText().get(0);
+			if (document.getContent().getText().size() > 0) {
+				section = document.getContent().getText().get(0);
 			} else {
 				section = new Section("all");
-				document.getText().add(section);
+				document.getContent().getText().add(section);
 			}
 		} else {
 			section = new Section(chapter);
-			document.getText().add(section);
+			document.getContent().getText().add(section);
 		}
 
 		Elements paragraphs = htmlDoc.select("#workselectiontext tbody div");
@@ -115,8 +116,8 @@ public class CrawlReferenceLibrary {
 
 	public void crawl(File directory, URL bookUrl) throws IOException {
 		Book doc = new Book();
-		doc.setLanguage("en");
-		doc.setReligion("bahai");
+		doc.getMeta().setLanguage("en");
+		doc.getMeta().setReligion(new Religion(IdUtil.encode("Bahá'í"), "Bahá'í"));
 		for (URL section : getChildren(bookUrl)) {
 			try {
 				parseInput(doc, section);
@@ -125,11 +126,12 @@ public class CrawlReferenceLibrary {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Writing " + new File(directory, doc.getFilename()).toString() + "...");
+		System.out.println("Writing " + new File(directory, doc.getId()).toString() + "...");
 		try {
 			doc.writeXML(directory);
 		} catch (JAXBException e) {
-			System.err.format("Error while writing %s: %s\n", doc.getFilename(), e.getLocalizedMessage());
+			e.printStackTrace();
+			System.err.format("Error while writing %s: %s\n", doc.getId(), e.getLocalizedMessage());
 		}
 	}
 

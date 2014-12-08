@@ -1,7 +1,8 @@
 package ws.holybook.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Model class to represent an author in the database.
@@ -11,28 +12,21 @@ import java.util.List;
 public class Author {
 
 	private String id;
+	private String name;
 
-	private List<Book> books;
-
-	public Author() {
-		books = new ArrayList<>();
-	}
-	
-	public Author(String id) {
-		this();
+	public Author(String id, String name) {
 		this.id = id;
+		this.name = name;
 	}
 
+	@XmlAttribute
 	public String getId() {
 		return id;
 	}
-	
-	public void addBook(Book author) {
-		books.add(author);
-	}
-	
-	public List<Book> getBooks() {
-		return books;
+
+	@XmlElement(name = "name")
+	public String getName() {
+		return name;
 	}
 
 }

@@ -14,10 +14,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.*;
 
 /**
  * Model class to represent a book in the database.
@@ -25,116 +22,45 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author Hannes Widmoser
  */
 @XmlRootElement
+@XmlType(propOrder={"meta", "content"})
 public class Book {
 
-	private String language;
+	private Meta meta;
+	private Content content;
 
-	private String title;
-
-	private String source;
-
-	private String author;
-	private String religion;
-
-	private int pages;
-
-	private String filename;
-
-	private List<Section> text;
+	private String id;
 
 	public Book() {
-		this.text = new ArrayList<>();
+		this.content = new Content();
+		this.meta = new Meta();
 	}
 
-	public Book(String language, String title, String source, String author, int pages, List<Section> text) {
+	public Book(Meta meta) {
 		this();
-		setLanguage(language);
-		setTitle(title);
-		setSource(source);
-		setPages(pages);
-		setText(text);
-		setAuthor(author);
-	}
-
-	public Book(String language, String title, String source, String author, int pages, Section... text) {
-		this(language, title, source, author, pages, Arrays.asList(text));
+		this.meta = meta;
 	}
 
 	@XmlAttribute
 	public String getId() {
-		return filename;
+		return id;
 	}
 
-	@XmlAttribute
-	public String getLanguage() {
-		return language;
+	public void setId(String id) {
+		this.id = id;
 	}
 
-	public void setLanguage(String language) {
-		this.language = language;
-	}
-
-	@XmlAttribute
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-		this.filename = IdUtil.encode(title);
-	}
-
-	@XmlAttribute
-	public String getSource() {
-		return source;
-	}
-
-	public void setSource(String source) {
-		this.source = source;
-	}
-
-	@XmlAttribute
-	public String getAuthor() {
-		return author;
-	}
-	
-	@XmlAttribute
-	public String getReligion() {
-		return religion;
-	}
-
-	public void setAuthor(String author) {
-		this.author = author;
-	}
-	
-	public void setReligion(String religion) {
-		this.religion = religion;
-	}
-
-	@XmlAttribute
-	public int getPages() {
-		return pages;
-	}
-
-	public void setPages(int pages) {
-		this.pages = pages;
-	}
-
-	@XmlElement(name = "section")
-	public List<Section> getText() {
-		return text;
-	}
-
-	public void setText(List<Section> text) {
-		for (int i = 0; i < text.size(); ++i) {
-			text.get(i).setId(String.valueOf(i));
-		}
-		this.text = text;
-	}
-
-	@XmlTransient
 	public String getFilename() {
-		return filename;
+		return id + ".xml";
+	}
+
+	@XmlElement(name = "meta")
+	public Meta getMeta() {
+		return meta;
+	}
+
+	@XmlElement(name = "content")
+	public Content getContent() {
+		return content;
 	}
 
 	private Marshaller getXMLMarshaller() throws JAXBException {
@@ -155,7 +81,7 @@ public class Book {
 	}
 
 	public void writeXML(File directory) throws JAXBException {
-		File file = new File(directory, getFilename() + ".xml");
+		File file = new File(directory, getId() + ".xml");
 		getXMLMarshaller().marshal(this, file);
 	}
 
